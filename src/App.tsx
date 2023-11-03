@@ -3,16 +3,23 @@ import viteLogo from '/vite.svg'
 import './App.css'
 
 import {AutomergeUrl} from '@automerge/automerge-repo'
-import {useDocument} from '@automerge/automerge-repo-react-hooks'
-import * as A from "@automerge/automerge"
+import { create } from 'zustand'
 
-interface CounterDoc {
-  counter1: A.Counter
-  counter2: A.Counter
-}
+
+const store = create<{
+  counter1: number
+  counter2: number,
+  increment: (counter: 'counter1' | 'counter2') => void
+}>((set) => ({
+  counter1: 0,
+  counter2: 0,
+  increment: (counter: 'counter1' | 'counter2') => set((state) => ({[counter]: state[counter] + 1}))
+}))
+
 
 const Counter1 = ({docUrl}: {docUrl: AutomergeUrl}) => {
-  const [doc, changeDoc] = useDocument<CounterDoc>(docUrl)
+  const increment = store((state) => state.increment)
+  const counter1 = store((state) => state.counter1)
 
   // I really want to get a slice of this doc, but I can't figure out how to do
   // it.
@@ -21,23 +28,26 @@ const Counter1 = ({docUrl}: {docUrl: AutomergeUrl}) => {
   // useSelector((state) => state.counter1.value)
   // from react-redux
 
-  console.log(`Rendering Counter1 with docUrl=${docUrl} and doc=${JSON.stringify(doc)}`)
+  console.log(`Rendering Counter1 with docUrl=${docUrl} and doc=${JSON.stringify({ counter1 })}`)
   return (
-    <button onClick={() => changeDoc((d) => d.counter1.increment(1))}>
-      count is { doc && doc.counter1.value }
+    <button onClick={() => increment('counter1')}>
+      count is {counter1}
     </button>
   )
 }
 
 const Counter2 = ({docUrl}: {docUrl: AutomergeUrl}) => {
-  const [doc, changeDoc] = useDocument<CounterDoc>(docUrl)
-  console.log(`Rendering Counter2 with docUrl=${docUrl} and doc=${JSON.stringify(doc)}`)
+  const increment = store((state) => state.increment)
+  const counter2 = store((state) => state.counter2)  
+
+  console.log(`Rendering Counter2 with docUrl=${docUrl} and doc=${JSON.stringify({ counter2})}`)
   return (
-    <button onClick={() => changeDoc((d) => d.counter2.increment(1))}>
-      count is { doc && doc.counter2.value }
+    <button onClick={() => increment('counter2')}>
+      count is { counter2 } 
     </button>
   )
 }
+
 
 function App({docUrl}: {docUrl: AutomergeUrl}) {
   return (
